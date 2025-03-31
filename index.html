@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bopimo Level Calculator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    @font-face {
+      font-family: 'Quicksand';
+      src: url('https://cdn.bopimo.com/static/fonts/Quicksand-Bold.ttf');
+    }
+    * {
+      font-family: 'Quicksand', sans-serif;
+      box-sizing: border-box;
+    }
+    body {
+      background: #2c1b3c;
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+    .logo-intro {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo-intro img {
+      max-height: 25vh;
+      margin-bottom: 20px;
+    }
+    .logo-intro p {
+      font-size: 1rem;
+      max-width: 500px;
+    }
+    .logo-intro a {
+      color: #8f6bd1;
+      text-decoration: underline;
+    }
+    .logo-small {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      height: 50px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .user-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .user-card, .back-button {
+      background: #3a264d;
+      padding: 10px;
+      border-radius: 10px;
+      width: 220px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background 0.2s;
+    }
+    .user-card:hover, .back-button:hover {
+      background: #513166;
+    }
+    .user-card img {
+      width: 100px;
+      height: 100px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .username {
+      font-size: 1.2rem;
+      margin-bottom: 5px;
+    }
+    .level {
+      background: #6a38a2;
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+    .stats {
+      display: flex;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+    .user-detail {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #2c1b3c;
+      padding: 40px 20px;
+      z-index: 100;
+    }
+    .user-detail img {
+      width: 200px;
+      height: 200px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .back-button {
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      font-size: 1rem;
+    }
+    .calc-level {
+      margin-top: 10px;
+      font-size: 1.1rem;
+      color: #ccc;
+    }
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-intro">
+    <img src="./boplvlcalc.svg" alt="logo" />
+    <p>
+      thank you to @1ngots in the bopimo server for the calculator!<br>
+      see the og here
+      <a href="https://discord.com/channels/618601345427177473/1352749205176713256" target="_blank">
+        (link)
+      </a>.<br>
+      can you get higher than my score of 225?? probably.
+    </p>
+  </div>
+
+  <input type="text" id="search" placeholder="search users...">
+  <div class="user-list" id="users"></div>
+  <div class="user-detail" id="user-detail"></div>
+  <img src="./boplvlcalc.svg" class="logo-small" id="corner-logo" style="display: none;" />
+
+  <footer>
+    made by PuzzlingGGG (just Puzzling on Bopimo). not affiliated with Bopimo in any way.
+  </footer>
+
+  <script>
+    const userList = document.getElementById('users');
+    const userDetail = document.getElementById('user-detail');
+    const searchBox = document.getElementById('search');
+    const cornerLogo = document.getElementById('corner-logo');
+
+    async function fetchUsers(search = '') {
+      const res = await fetch(`https://corsproxy.io/?url=https://www.bopimo.com/api/users?search=${search}&page=1`);
+      const data = await res.json();
+      userList.innerHTML = '';
+      userDetail.style.display = 'none';
+      userList.style.display = 'flex';
+      cornerLogo.style.display = 'none';
+
+      data.data.forEach(user => {
+        const card = document.createElement('div');
+        card.className = 'user-card';
+        card.onclick = () => showUser(user);
+        card.innerHTML = `
+          <img src="${user.bopi.headshot_url}" alt="${user.username}" />
+          <div class="username">${user.username}</div>
+          <div class="level">Spirit ${user.level}</div>
+          <div class="stats">
+            <div><i class="fa-solid fa-play"></i> ${user.levels_sum_plays || 0}</div>
+            <div><i class="fa-solid fa-flag"></i> ${user.clears_count}</div>
+            <div><i class="fa-solid fa-trophy"></i> ${user.user_achievements_count}</div>
+          </div>
+        `;
+        userList.appendChild(card);
+      });
+    }
+
+    function showUser(user) {
+      userList.style.display = 'none';
+      userDetail.style.display = 'flex';
+      cornerLogo.style.display = 'block';
+      const s = user.level;
+      const c = user.clears_count;
+      const a = user.user_achievements_count;
+      const v = a * (s / 1.5 * (c / 0.75) * Math.pow(s, s / 271.5)) + 1; // did i do this right?
+      const calc = Math.round(v);
+
+      userDetail.innerHTML = `
+        <div class="back-button" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i> back</div>
+        <img src="${user.bopi.bopi_url}" alt="${user.username}" />
+        <h2>${user.username}</h2>
+        <div class="level">Spirit ${user.level}</div>
+        <div class="stats">
+          <div><i class="fa-solid fa-play"></i> ${user.levels_sum_plays || 0}</div>
+          <div><i class="fa-solid fa-flag"></i> ${user.clears_count}</div>
+          <div><i class="fa-solid fa-trophy"></i> ${user.user_achievements_count}</div>
+        </div>
+        <div class="calc-level">Calculated Level: ${calc}</div>
+        <p style="margin-top:10px;"><a href="${user.url}" style="color:white;text-decoration:underline;">view profile</a></p>
+      `;
+    }
+
+    function goBack() {
+      userDetail.style.display = 'none';
+      userList.style.display = 'flex';
+      cornerLogo.style.display = 'none';
+    }
+
+    searchBox.addEventListener('input', () => fetchUsers(searchBox.value));
+    fetchUsers();
+  </script>
+</body>
+</html>
